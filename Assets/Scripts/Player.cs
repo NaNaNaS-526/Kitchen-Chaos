@@ -1,40 +1,54 @@
 using UnityEngine;
 
-
 public class Player : MonoBehaviour
 {
+    [SerializeField] private GameInput gameInput;
     [SerializeField] private float moveSpeed = 6.0f;
     [SerializeField] private float rotateSpeed = 10.0f;
     private bool _isWalking;
 
     private void Update()
     {
-        var inputVector = new Vector2(0, 0);
-        if (Input.GetKey(KeyCode.W))
+        Vector2 inputVector = gameInput.GetMovementVectorNormalized();
+        Vector3 moveDirection = new Vector3(inputVector.x, 0.0f, inputVector.y).normalized;
+
+        float moveDistance = moveSpeed * Time.deltaTime;
+        float playerRadius = 0.55f;
+        float playerHeight = 2.0f;
+
+        var playerTransform = transform;
+        var playerPosition = playerTransform.position;
+        bool canMove = !Physics.CapsuleCast(playerPosition, playerPosition + Vector3.up * playerHeight,
+            playerRadius, moveDirection, moveDistance);
+        if (!canMove)
         {
-            inputVector.y += 1;
+            Vector3 moveDirectionX = new Vector3(moveDirection.x, 0.0f, 0.0f).normalized;
+            canMove = !Physics.CapsuleCast(playerPosition, playerPosition + Vector3.up * playerHeight,
+                playerRadius, moveDirectionX, moveDistance);
+            if (canMove)
+            {
+                moveDirection = moveDirectionX;
+            }
+            else
+            {
+                Vector3 moveDirectionZ = new Vector3(0.0f, 0.0f, moveDirection.z).normalized;
+                canMove = !Physics.CapsuleCast(playerPosition, playerPosition + Vector3.up * playerHeight,
+                    playerRadius, moveDirectionZ, moveDistance);
+                if (canMove)
+                {
+                    moveDirection = moveDirectionZ;
+                }
+            }
         }
 
-        if (Input.GetKey(KeyCode.S))
+        if (canMove)
         {
-            inputVector.y -= 1;
+            transform.position += moveDirection * moveDistance;
         }
 
-        if (Input.GetKey(KeyCode.A))
-        {
-            inputVector.x -= 1;
-        }
-
-        if (Input.GetKey(KeyCode.D))
-        {
-            inputVector.x += 1;
-        }
-
-        inputVector = inputVector.normalized;
-        var moveDirection = new Vector3(inputVector.x, 0.0f, inputVector.y);
         _isWalking = moveDirection != Vector3.zero;
-        transform.position += moveDirection * (moveSpeed * Time.deltaTime);
-        transform.forward = Vector3.Slerp(transform.forward, moveDirection, Time.deltaTime * rotateSpeed);
+
+        transform.forward = Vector3.Slerp(playerTransform.forward, moveDirection, Time.deltaTime * rotateSpeed);
     }
 
     public bool IsWalking()
