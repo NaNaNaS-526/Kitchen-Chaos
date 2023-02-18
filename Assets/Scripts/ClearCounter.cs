@@ -1,15 +1,27 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
-public class ClearCounter : MonoBehaviour
+public class ClearCounter : BaseCounter
 {
-    [SerializeField] private ScriptableKitchenObject kitchenObject;
+    [SerializeField] private KitchenObjectSO kitchenObjectSO;
 
-    [SerializeField] private Transform counterTopPoint;
-
-    public void Interact()
+    public override void Interact(Player player)
     {
-        Transform kitchenObjectTransform = Instantiate(kitchenObject.prefab, counterTopPoint);
-        kitchenObjectTransform.localPosition = Vector3.zero;
-        Debug.Log(kitchenObjectTransform.GetComponent<KitchenObject>().GetScriptableKitchenObject());
+        if (!HasKitchenObject())
+        {
+            if (player.HasKitchenObject())
+            {
+                player.GetKitchenObject().SetKitchenObjectParent(this);
+                return;
+            }
+        }
+
+        if (HasKitchenObject())
+        {
+            if (!player.HasKitchenObject())
+            {
+                GetKitchenObject().SetKitchenObjectParent(player);
+            }
+        }
     }
 }
