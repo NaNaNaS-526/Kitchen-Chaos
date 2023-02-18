@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class Player : MonoBehaviour
+public class Player : MonoBehaviour, IKitchenObjectParent
 {
     public static Player Instance { get; private set; }
 
@@ -9,16 +9,18 @@ public class Player : MonoBehaviour
 
     public class OnSelectedCounterChangedEventArgs : EventArgs
     {
-        public ClearCounter SelectedCounter;
+        public BaseCounter SelectedCounter;
     }
 
     [SerializeField] private GameInput gameInput;
     [SerializeField] private LayerMask countersLayerMask;
     [SerializeField] private float moveSpeed = 6.0f;
     [SerializeField] private float rotateSpeed = 10.0f;
+    [SerializeField] private Transform kitchenObjectHoldPoint;
     private bool _isWalking;
     private Vector3 _lastInteractDirection;
-    private ClearCounter _selectedCounter;
+    private BaseCounter _selectedCounter;
+    private KitchenObject _kitchenObject;
 
     private void Awake()
     {
@@ -27,7 +29,7 @@ public class Player : MonoBehaviour
 
     private void Start()
     {
-        gameInput.OnInteractAction += GameInputOnInteractAction;
+        gameInput.OnInteractAction += GameInput_OnInteractAction;
     }
 
 
@@ -42,11 +44,11 @@ public class Player : MonoBehaviour
         return _isWalking;
     }
 
-    private void GameInputOnInteractAction(object sender, EventArgs e)
+    private void GameInput_OnInteractAction(object sender, EventArgs e)
     {
         if (_selectedCounter != null)
         {
-            _selectedCounter.Interact();
+            _selectedCounter.Interact(this);
         }
     }
 
@@ -60,11 +62,11 @@ public class Player : MonoBehaviour
         if (Physics.Raycast(transform.position, _lastInteractDirection, out RaycastHit raycastHit, interactDistance,
                 countersLayerMask))
         {
-            if (raycastHit.transform.TryGetComponent(out ClearCounter clearCounter))
+            if (raycastHit.transform.TryGetComponent(out BaseCounter baseCounter))
             {
-                if (clearCounter != _selectedCounter)
+                if (baseCounter != _selectedCounter)
                 {
-                    SetSelectedCounter(clearCounter);
+                    SetSelectedCounter(baseCounter);
                 }
             }
             else
@@ -83,6 +85,7 @@ public class Player : MonoBehaviour
     private void HandleMovement()
     {
         var playerTransform = transform;
+        var playerPosition = playerTransform.position;
         Vector2 inputVector = gameInput.GetMovementVectorNormalized();
         Vector3 moveDirection = new Vector3(inputVector.x, 0.0f, inputVector.y).normalized;
         transform.forward = Vector3.Slerp(playerTransform.forward, moveDirection, Time.deltaTime * rotateSpeed);
@@ -91,7 +94,6 @@ public class Player : MonoBehaviour
         float playerRadius = 0.55f;
         float playerHeight = 2.0f;
 
-        var playerPosition = playerTransform.position;
         bool canMove = !Physics.CapsuleCast(playerPosition, playerPosition + Vector3.up * playerHeight,
             playerRadius, moveDirection, moveDistance);
         if (!canMove)
@@ -123,10 +125,35 @@ public class Player : MonoBehaviour
         _isWalking = moveDirection != Vector3.zero;
     }
 
-    private void SetSelectedCounter(ClearCounter selectedCounter)
+    private void SetSelectedCounter(BaseCounter selectedCounter)
     {
-        this._selectedCounter = selectedCounter;
+        _selectedCounter = selectedCounter;
         OnSelectedCounterChanged?.Invoke(this,
             new OnSelectedCounterChangedEventArgs { SelectedCounter = _selectedCounter });
+    }
+
+    public Transform GetKitchenObjectFollowTransform()
+    {
+        return kitchenObjectHoldPoint;
+    }
+
+    public void SetKitchenObject(KitchenObject kitchenObject)
+    {
+        _kitchenObject = kitchenObject;
+    }
+
+    public KitchenObject GetKitchenObject()
+    {
+        return _kitchenObject;
+    }
+
+    public void ClearKitchenObject()
+    {
+        _kitchenObject = null;
+    }
+
+    public bool HasKitchenObject()
+    {
+        return _kitchenObject;
     }
 }

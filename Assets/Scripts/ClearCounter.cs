@@ -1,11 +1,27 @@
-using System.Collections;
-using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
-public class ClearCounter : MonoBehaviour
+public class ClearCounter : BaseCounter
 {
-    public void Interact()
+    [SerializeField] private KitchenObjectSO kitchenObjectSO;
+
+    public override void Interact(Player player)
     {
-        Debug.Log("Interaction!");
+        if (!HasKitchenObject())
+        {
+            if (player.HasKitchenObject())
+            {
+                player.GetKitchenObject().SetKitchenObjectParent(this);
+                return;
+            }
+        }
+
+        if (HasKitchenObject())
+        {
+            if (!player.HasKitchenObject())
+            {
+                GetKitchenObject().SetKitchenObjectParent(player);
+            }
+        }
     }
 }
