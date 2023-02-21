@@ -9,12 +9,12 @@ namespace Counters
 
         public virtual void Interact(Player player)
         {
-            Debug.Log("BaseCounter Interact");
+            //Debug.Log("BaseCounter Interact");
         }
 
         public virtual void InteractAlternate(Player player)
         {
-            Debug.Log("BaseCounter InteractAlternate");
+            //Debug.Log("BaseCounter InteractAlternate");
         }
 
         public Transform GetKitchenObjectFollowTransform()
