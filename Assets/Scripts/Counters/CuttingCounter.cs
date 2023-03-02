@@ -28,14 +28,23 @@ namespace Counters
                         {
                             ProgressNormalized = (float)_cuttingProgress / cuttingRecipeSO.cuttingProgressMax
                         });
-                        return;
                     }
                 }
             }
 
-            if (HasKitchenObject())
+            else
             {
-                if (!player.HasKitchenObject())
+                if (player.HasKitchenObject())
+                {
+                    if (player.GetKitchenObject().TryGetPlate(out PlateKitchenObject plateKitchenObject))
+                    {
+                        if (plateKitchenObject.TryAddIngredient(GetKitchenObject().GetKitchenObjectSO()))
+                        {
+                            GetKitchenObject().DestroySelf();
+                        }
+                    }
+                }
+                else
                 {
                     GetKitchenObject().SetKitchenObjectParent(player);
                 }
