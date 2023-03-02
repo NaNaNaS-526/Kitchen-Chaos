@@ -110,14 +110,32 @@ namespace Counters
                         {
                             ProgressNormalized = _fryingTimer / _fryingRecipeSO.fryingTimerMax
                         });
-                        return;
                     }
                 }
             }
 
-            if (HasKitchenObject())
+            else
             {
-                if (!player.HasKitchenObject())
+                if (player.HasKitchenObject())
+                {
+                    if (player.GetKitchenObject().TryGetPlate(out PlateKitchenObject plateKitchenObject))
+                    {
+                        if (plateKitchenObject.TryAddIngredient(GetKitchenObject().GetKitchenObjectSO()))
+                        {
+                            GetKitchenObject().DestroySelf();
+                            _currentState = State.Idle;
+                            OnStateChanged?.Invoke(this, new OnStateChangedEventArgs
+                            {
+                                state = _currentState
+                            });
+                            OnProgressChanged?.Invoke(this, new IHasProgressBar.OnProgressChangedEventArgs
+                            {
+                                ProgressNormalized = 0f
+                            });
+                        }
+                    }
+                }
+                else
                 {
                     GetKitchenObject().SetKitchenObjectParent(player);
                     _currentState = State.Idle;
