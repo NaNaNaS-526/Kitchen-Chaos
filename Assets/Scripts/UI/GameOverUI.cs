@@ -16,7 +16,7 @@ namespace UI
 
         private void GameManager_OnGameStateChanged(object sender, EventArgs e)
         {
-            if (KitchenGameManager.Instance.isGameOver())
+            if (KitchenGameManager.Instance.IsGameOver())
             {
                 Show();
                 recipesDeliveredText.text = DeliveryManager.Instance.GetSuccessfulRecipesAmount().ToString();

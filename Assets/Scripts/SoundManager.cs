@@ -5,13 +5,15 @@ using Random = UnityEngine.Random;
 
 public class SoundManager : MonoBehaviour
 {
+    private const string PlayerPrefsSoundEffectsVolume = "SoundEffects";
     public static SoundManager Instance { get; private set; }
-    [SerializeField] private Transform mainCamera;
     [SerializeField] private AudioClipsRefsSO audioClipsRefsSO;
+    private float _volume = 1.0f;
 
     private void Awake()
     {
         Instance = this;
+        _volume = PlayerPrefs.GetFloat(PlayerPrefsSoundEffectsVolume, 1.0f);
     }
 
     private void Start()
@@ -56,16 +58,34 @@ public class SoundManager : MonoBehaviour
     private void DeliveryManager_OnRecipeSuccess(object sender, EventArgs e)
     {
         DeliveryCounter deliveryCounter = DeliveryCounter.Instance;
-        PlaySound(audioClipsRefsSO.deliveryFail, deliveryCounter.transform.position);
+        PlaySound(audioClipsRefsSO.deliverySuccess, deliveryCounter.transform.position);
     }
 
-    private void PlaySound(AudioClip[] audioClips, Vector3 position, float volume = 1.0f)
+    private void PlaySound(AudioClip[] audioClips, Vector3 position, float volumeMultiplier = 1.0f)
     {
-        AudioSource.PlayClipAtPoint(audioClips[Random.Range(0, audioClips.Length)], position, volume);
+        AudioSource.PlayClipAtPoint(audioClips[Random.Range(0, audioClips.Length)], position,
+            volumeMultiplier * _volume);
     }
 
     public void PlayFootstepSound(Vector3 position, float volume)
     {
         PlaySound(audioClipsRefsSO.footstep, position, volume);
+    }
+
+    public void ChangeVolume()
+    {
+        _volume += 0.1f;
+        if (_volume > 1.0f)
+        {
+            _volume = 0.0f;
+        }
+
+        PlayerPrefs.SetFloat(PlayerPrefsSoundEffectsVolume, _volume);
+        PlayerPrefs.Save();
+    }
+
+    public float GetVolume()
+    {
+        return _volume;
     }
 }
